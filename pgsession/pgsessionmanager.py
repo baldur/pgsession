@@ -16,17 +16,17 @@ class PgSessionManager(SessionManager):
 
     @property
     def connection(self):
-        result = urlparse.urlparse(os.environ['NOTEBOOK_DATABASE_URL'])
+        result = urlparse(os.environ['NOTEBOOK_DATABASE_URL'])
         username = result.username
         password = result.password
         database = result.path[1:]
         hostname = result.hostname
         """Start a database connection"""
         if self._connection is None:
-            self._connection = psycopg2.connect(database = database,
-                                                user = username,
-                                                password = password,
-                                                host = hostname)
+            self._connection = psycopg2.connect(database=database,
+                                                user=username,
+                                                password=password,
+                                                host=hostname)
         return self._connection
 
     def session_exists(self, path):
