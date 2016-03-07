@@ -29,12 +29,16 @@ class PgSessionManager(SessionManager):
                                                 host=hostname)
         return self._connection
 
-    def session_exists(self, path):
-        """Check to see if the session for a given notebook exists"""
+    def commit(self):
         if self._connection:
             self._connection.commit()
+
+    def session_exists(self, path):
+        """Check to see if the session for a given notebook exists"""
+        self.commit()
         self.cursor.execute("SELECT * FROM session WHERE path= '%s'" % (path))
         reply = self.cursor.fetchone()
+        self.commit()
         if reply is None:
             return False
         else:
@@ -44,6 +48,7 @@ class PgSessionManager(SessionManager):
         self.cursor.execute("INSERT INTO session VALUES (%s,%s,%s)",
             (session_id, path, kernel_id)
         )
+        self.commit()
         return self.get_session(session_id=session_id)
 
 
@@ -65,6 +70,7 @@ class PgSessionManager(SessionManager):
         except KeyError:
             # The kernel is missing, so the session just got deleted.
             row = None
+        self.commit()
 
         if row is None:
             q = []
@@ -99,6 +105,7 @@ class PgSessionManager(SessionManager):
             sets.append("%s=%%s" % column)
         query = "UPDATE session SET %s WHERE session_id='%s'" % (', '.join(sets))
         self.cursor.execute(query % list(kwargs.values()) + [session_id])
+        self.commit()
 
     def row_to_model(self, row):
         """Takes sqlite database session row and turns it into a dictionary"""
@@ -126,14 +133,15 @@ class PgSessionManager(SessionManager):
         self.kernel_manager.shutdown_kernel(session['kernel']['id'])
         query = "DELETE FROM session WHERE session_id=%s" % session_id
         self.cursor.execute(query)
+        self.commit()
 
     def list_sessions(self):
         """Returns a list of dictionaries containing all the information from
         the session database"""
-        if self._connection:
-            self._connection.commit()
+        self.commit()
         self.cursor.execute("SELECT * FROM session")
         result = []
+        self.commit()
         # We need to use fetchall() here, because row_to_model can delete rows,
         # which messes up the cursor if we're iterating over rows.
         for row in self.cursor.fetchall():
