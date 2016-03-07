@@ -1,7 +1,7 @@
 from notebook.services.sessions.sessionmanager import SessionManager
 import psycopg2
 import psycopg2.extras
-import urlparse
+from urllib.parse import urlparse
 import os
 
 
