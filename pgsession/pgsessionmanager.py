@@ -102,13 +102,9 @@ class PgSessionManager(SessionManager):
         for column in kwargs.keys():
             if column not in self._columns:
                 raise TypeError("No such column: %r" % column)
-            sets.append("%s=%%s" % column)
+            sets.append("%s='%%s'" % column)
         query = "UPDATE session SET %s WHERE session_id='%%s'" % (', '.join(sets))
-        print("-=-=-=- query")
-        print(query)
-        print(query % list(kwargs.values()) + [session_id])
-        print("-=-=-=-")
-        self.cursor.execute(query % list(kwargs.values()) + [session_id])
+        self.cursor.execute(query % tuple(list(kwargs.values()) + [session_id]))
         self.commit()
 
     def row_to_model(self, row):
@@ -135,7 +131,7 @@ class PgSessionManager(SessionManager):
         # Check that session exists before deleting
         session = self.get_session(session_id=session_id)
         self.kernel_manager.shutdown_kernel(session['kernel']['id'])
-        query = "DELETE FROM session WHERE session_id=%s" % session_id
+        query = "DELETE FROM session WHERE session_id='%s'" % session_id
         self.cursor.execute(query)
         self.commit()
 
