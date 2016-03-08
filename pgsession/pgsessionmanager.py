@@ -103,7 +103,11 @@ class PgSessionManager(SessionManager):
             if column not in self._columns:
                 raise TypeError("No such column: %r" % column)
             sets.append("%s=%%s" % column)
-        query = "UPDATE session SET %s WHERE session_id='%s'" % (', '.join(sets))
+        query = "UPDATE session SET %s WHERE session_id='%%s'" % (', '.join(sets))
+        print("-=-=-=- query")
+        print(query)
+        print(query % list(kwargs.values()) + [session_id])
+        print("-=-=-=-")
         self.cursor.execute(query % list(kwargs.values()) + [session_id])
         self.commit()
 
